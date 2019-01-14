@@ -1,0 +1,16 @@
+{
+  "name": "keyruler",
+  "version": "1.0.0",
+  "description": "A key vault with scope",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node src/index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "1.13.3",
+    "sqlite3": "4.0.4"
+  }
+}
