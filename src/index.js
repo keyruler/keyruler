@@ -44,8 +44,4 @@ fastify.delete('/deleteKey', (req, reply) => {
     });
 });
 
-fastify.get('/doHMAC', (req, reply) => {
-    reply.code(500).send();
-});
-
 fastify.listen(port, () => console.log(`Running keyruler on port ${port}`));
