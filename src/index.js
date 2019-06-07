@@ -1,11 +1,12 @@
 const fastify = require('fastify')()
-const SQLite = require('sqlite3').verbose()
+const SQLite = require('better-sqlite3')
 const crypto = require('crypto')
 
 const port = process.env.PORT || 3004
 
-const db = new SQLite.Database('keyruler')
-db.run("CREATE TABLE IF NOT EXISTS 'keys' ('kid' TEXT NOT NULL, 'key' TEXT NOT NULL, 'context' TEXT NOT NULL, PRIMARY KEY ('kid'))")
+const db = new SQLite('keyruler.db')
+db.prepare("CREATE TABLE IF NOT EXISTS 'keys' ('kid' TEXT NOT NULL," +
+  "'key' TEXT NOT NULL, 'context' TEXT NOT NULL, PRIMARY KEY ('kid'))").run()
 
 fastify.post('/newKey', (req, reply) => {
   const kid = crypto.randomBytes(5).toString('base64')
@@ -14,33 +15,38 @@ fastify.post('/newKey', (req, reply) => {
   // TODO: Use Shamirs Secret Sharing for multi keys?
   const key = crypto.randomBytes(32).toString('base64')
 
-  db.run("INSERT INTO 'keys' (kid, key, context) VALUES (?, ?, ?)", [kid, key, req.query.context], (err) => {
-    if (!err) {
-      reply.send({ kid, key })
-    } else {
-      reply.code(500).send()
-    }
-  })
+  try {
+    db.prepare("INSERT INTO 'keys' (kid, key, context) VALUES (?, ?, ?)").run(kid, key, req.query.context)
+    reply.send({ kid, key })
+  } catch (e) {
+    reply.code(500).send()
+  }
 })
 
 fastify.get('/getKey', (req, reply) => {
-  db.get("SELECT * FROM 'keys' WHERE (kid=?)", req.query.kid, (err, row) => {
-    if (!err && row !== undefined) {
+  try {
+    const row = db.prepare("SELECT * FROM 'keys' WHERE (kid=?)").get(req.query.kid)
+    if (row !== null && row !== undefined) {
       reply.send({ key: row.key })
     } else {
       reply.code(500).send()
     }
-  })
+  } catch (e) {
+    reply.code(500).send()
+  }
 })
 
 fastify.delete('/deleteKey', (req, reply) => {
-  db.run("DELETE * FROM 'keys' WHERE (kid=?)", req.query.kid, (err) => {
-    if (!err && this.changes) {
+  try {
+    const info = db.prepare("DELETE FROM 'keys' WHERE (kid=?)").run(req.query.kid)
+    if (info.changes) {
       reply.code(200).send()
     } else {
       reply.code(500).send()
     }
-  })
+  } catch (err) {
+    reply.code(500).send()
+  }
 })
 
 fastify.listen(port, () => console.log(`Running keyruler on port ${port}`))
