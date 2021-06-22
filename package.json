@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^5.4.0",
-    "fastify": "1.13.3"
+    "fastify": "^3.18.0"
   },
   "devDependencies": {
     "eslint": "^7.29.0",
